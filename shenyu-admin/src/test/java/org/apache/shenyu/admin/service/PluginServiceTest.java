@@ -18,11 +18,7 @@
 package org.apache.shenyu.admin.service;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.shenyu.admin.mapper.PluginHandleMapper;
 import org.apache.shenyu.admin.mapper.PluginMapper;
-import org.apache.shenyu.admin.mapper.RuleConditionMapper;
-import org.apache.shenyu.admin.mapper.RuleMapper;
-import org.apache.shenyu.admin.mapper.SelectorConditionMapper;
 import org.apache.shenyu.admin.mapper.SelectorMapper;
 import org.apache.shenyu.admin.model.dto.BatchCommonDTO;
 import org.apache.shenyu.admin.model.dto.PluginDTO;
@@ -33,6 +29,7 @@ import org.apache.shenyu.admin.model.page.PageParameter;
 import org.apache.shenyu.admin.model.query.PluginQuery;
 import org.apache.shenyu.admin.model.vo.PluginVO;
 import org.apache.shenyu.admin.service.impl.PluginServiceImpl;
+import org.apache.shenyu.admin.service.publish.PluginEventPublisher;
 import org.apache.shenyu.admin.utils.ShenyuResultMessage;
 import org.apache.shenyu.common.constant.AdminConstants;
 import org.apache.shenyu.common.dto.PluginData;
@@ -45,7 +42,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.context.ApplicationEventPublisher;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -76,30 +72,14 @@ public final class PluginServiceTest {
     private PluginMapper pluginMapper;
     
     @Mock
-    private PluginHandleMapper pluginHandleMapper;
-    
-    @Mock
     private SelectorMapper selectorMapper;
     
     @Mock
-    private RuleMapper ruleMapper;
-    
-    @Mock
-    private RuleConditionMapper ruleConditionMapper;
-    
-    @Mock
-    private SelectorConditionMapper selectorConditionMapper;
-    
-    @Mock
-    private ApplicationEventPublisher eventPublisher;
-    
-    @Mock
-    private ResourceService resourceService;
+    private PluginEventPublisher modelDataEventPublisher;
     
     @BeforeEach
     public void setUp() {
-        pluginService = new PluginServiceImpl(pluginMapper, pluginHandleMapper, selectorMapper, selectorConditionMapper,
-                ruleMapper, ruleConditionMapper, eventPublisher, resourceService);
+        pluginService = new PluginServiceImpl(pluginMapper, modelDataEventPublisher);
     }
     
     @Test

@@ -27,6 +27,7 @@ import org.apache.shenyu.admin.model.page.PageParameter;
 import org.apache.shenyu.admin.model.query.PluginHandleQuery;
 import org.apache.shenyu.admin.model.vo.PluginHandleVO;
 import org.apache.shenyu.admin.service.impl.PluginHandleServiceImpl;
+import org.apache.shenyu.admin.service.publish.PluginHandleEventPublisher;
 import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,9 +41,7 @@ import org.mockito.quality.Strictness;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -63,10 +62,13 @@ public final class PluginHandleServiceTest {
 
     @Mock
     private ShenyuDictMapper shenyuDictMapper;
+    
+    @Mock
+    private PluginHandleEventPublisher eventPublisher;
 
     @BeforeEach
     public void setUp() {
-        pluginHandleService = new PluginHandleServiceImpl(pluginHandleMapper, shenyuDictMapper);
+        pluginHandleService = new PluginHandleServiceImpl(pluginHandleMapper, shenyuDictMapper, eventPublisher);
     }
 
     @Test
@@ -147,10 +149,9 @@ public final class PluginHandleServiceTest {
     @Test
     public void testDeletePluginHandles() {
         final List<String> ids = Lists.list("1", "2", "3");
-        final Set<String> idSet = new HashSet<>(ids);
-        given(this.pluginHandleMapper.deleteByIdSet(idSet)).willReturn(3);
+        given(this.pluginHandleMapper.deleteByIdList(ids)).willReturn(3);
         final Integer result = this.pluginHandleService.deletePluginHandles(ids);
-        assertThat(result, equalTo(idSet.size()));
+        assertThat(result, equalTo(ids.size()));
     }
 
     @Test

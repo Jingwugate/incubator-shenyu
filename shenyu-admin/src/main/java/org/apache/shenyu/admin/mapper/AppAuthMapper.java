@@ -21,11 +21,11 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.shenyu.admin.model.entity.AppAuthDO;
 import org.apache.shenyu.admin.model.query.AppAuthQuery;
+import org.apache.shenyu.admin.model.vo.AppAuthVO;
 import org.apache.shenyu.admin.validation.ExistProvider;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Set;
 
 /**
  * AppAuthMapper.
@@ -124,11 +124,11 @@ public interface AppAuthMapper extends ExistProvider {
     /**
      * update enable batch.
      *
-     * @param idSet   the ids
+     * @param idList  the ids
      * @param enabled the status
      * @return the count
      */
-    int updateEnableBatch(@Param("idSet") Set<String> idSet, @Param("enabled") Boolean enabled);
+    int updateEnableBatch(@Param("idList") List<String> idList, @Param("enabled") Boolean enabled);
     
     
     /**
@@ -171,4 +171,12 @@ public interface AppAuthMapper extends ExistProvider {
      * @return the app auth do
      */
     AppAuthDO findByAppKey(String appKey);
+    
+    /**
+     * select by condition.
+     *
+     * @param condition condition.
+     * @return list
+     */
+    List<AppAuthVO> selectByCondition(@Param("condition") AppAuthQuery condition);
 }

@@ -24,14 +24,17 @@ import org.apache.shenyu.admin.model.dto.PluginDTO;
 import org.apache.shenyu.admin.model.page.CommonPager;
 import org.apache.shenyu.admin.model.page.PageParameter;
 import org.apache.shenyu.admin.model.query.PluginQuery;
+import org.apache.shenyu.admin.model.query.PluginQueryCondition;
 import org.apache.shenyu.admin.model.result.ShenyuAdminResult;
 import org.apache.shenyu.admin.model.vo.PluginVO;
+import org.apache.shenyu.admin.service.PageService;
 import org.apache.shenyu.admin.service.PluginService;
 import org.apache.shenyu.admin.service.SyncDataService;
 import org.apache.shenyu.admin.utils.ShenyuResultMessage;
 import org.apache.shenyu.admin.validation.annotation.Existed;
 import org.apache.shenyu.common.dto.PluginData;
 import org.apache.shenyu.common.enums.DataEventTypeEnum;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,7 +57,7 @@ import java.util.List;
 @Validated
 @RestController
 @RequestMapping("/plugin")
-public class PluginController {
+public class PluginController implements PagedController<PluginQueryCondition, PluginVO> {
     
     private final PluginService pluginService;
     
@@ -100,6 +103,7 @@ public class PluginController {
      * @return {@linkplain ShenyuAdminResult}
      */
     @GetMapping("/{id}")
+    @RequiresPermissions("system:plugin:edit")
     public ShenyuAdminResult detailPlugin(@PathVariable("id")
                                           @Existed(message = "plugin is not existed",
                                                   provider = PluginMapper.class) final String id) {
@@ -114,6 +118,7 @@ public class PluginController {
      * @return {@linkplain ShenyuAdminResult}
      */
     @PostMapping("")
+    @RequiresPermissions("system:plugin:add")
     public ShenyuAdminResult createPlugin(@Valid @RequestBody final PluginDTO pluginDTO) {
         return ShenyuAdminResult.success(pluginService.createOrUpdate(pluginDTO));
     }
@@ -126,6 +131,7 @@ public class PluginController {
      * @return {@linkplain ShenyuAdminResult}
      */
     @PutMapping("/{id}")
+    @RequiresPermissions("system:plugin:edit")
     public ShenyuAdminResult updatePlugin(@PathVariable("id")
                                           @Existed(message = "plugin is not existed",
                                                   provider = PluginMapper.class) final String id,
@@ -141,6 +147,7 @@ public class PluginController {
      * @return {@linkplain ShenyuAdminResult}
      */
     @DeleteMapping("/batch")
+    @RequiresPermissions("system:plugin:delete")
     public ShenyuAdminResult deletePlugins(@RequestBody @NotEmpty final List<@NotBlank String> ids) {
         final String result = pluginService.delete(ids);
         if (StringUtils.isNoneBlank(result)) {
@@ -156,6 +163,7 @@ public class PluginController {
      * @return the mono
      */
     @PostMapping("/enabled")
+    @RequiresPermissions("system:plugin:disable")
     public ShenyuAdminResult enabled(@Valid @RequestBody final BatchCommonDTO batchCommonDTO) {
         final String result = pluginService.enabled(batchCommonDTO.getIds(), batchCommonDTO.getEnabled());
         if (StringUtils.isNoneBlank(result)) {
@@ -170,6 +178,7 @@ public class PluginController {
      * @return {@linkplain ShenyuAdminResult}
      */
     @PostMapping("/syncPluginAll")
+    @RequiresPermissions("system:plugin:modify")
     public ShenyuAdminResult syncPluginAll() {
         boolean success = syncDataService.syncAll(DataEventTypeEnum.REFRESH);
         if (success) {
@@ -189,11 +198,21 @@ public class PluginController {
     public ShenyuAdminResult syncPluginData(@PathVariable("id")
                                             @Existed(message = "plugin is not existed",
                                                     provider = PluginMapper.class) final String id) {
-        boolean success = syncDataService.syncPluginData(id);
-        if (success) {
-            return ShenyuAdminResult.success(ShenyuResultMessage.SYNC_SUCCESS);
-        } else {
-            return ShenyuAdminResult.error(ShenyuResultMessage.SYNC_FAIL);
-        }
+        return ShenyuAdminResult.success(syncDataService.syncPluginData(id) ? ShenyuResultMessage.SYNC_SUCCESS : ShenyuResultMessage.SYNC_FAIL);
+    }
+    
+    /**
+     * active plugin snapshot.
+     *
+     * @return list
+     */
+    @GetMapping("/snapshot/active")
+    public ShenyuAdminResult activePluginSnapshot() {
+        return ShenyuAdminResult.success(pluginService.activePluginSnapshot());
+    }
+    
+    @Override
+    public PageService<PluginQueryCondition, PluginVO> pageService() {
+        return pluginService;
     }
 }

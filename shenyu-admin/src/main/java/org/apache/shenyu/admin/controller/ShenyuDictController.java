@@ -17,6 +17,11 @@
 
 package org.apache.shenyu.admin.controller;
 
+import java.util.List;
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import org.apache.shenyu.admin.mapper.ShenyuDictMapper;
 import org.apache.shenyu.admin.model.dto.BatchCommonDTO;
 import org.apache.shenyu.admin.model.dto.ShenyuDictDTO;
@@ -26,6 +31,8 @@ import org.apache.shenyu.admin.model.result.ShenyuAdminResult;
 import org.apache.shenyu.admin.service.ShenyuDictService;
 import org.apache.shenyu.admin.utils.ShenyuResultMessage;
 import org.apache.shenyu.admin.validation.annotation.Existed;
+import org.apache.shiro.authz.annotation.Logical;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,13 +41,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import java.util.List;
 
 /**
  * this is a shenyu dict controller.
@@ -67,9 +69,10 @@ public class ShenyuDictController {
      * @return {@linkplain ShenyuAdminResult}
      */
     @GetMapping("")
+    @RequiresPermissions("system:dict:list")
     public ShenyuAdminResult queryDicts(final String type, final String dictCode, final String dictName,
-                                        @NotNull final Integer currentPage,
-                                        @NotNull final Integer pageSize) {
+                                        @RequestParam @NotNull final Integer currentPage,
+                                        @RequestParam @NotNull final Integer pageSize) {
         final ShenyuDictQuery query = new ShenyuDictQuery(type, dictCode, dictName, new PageParameter(currentPage, pageSize));
         return ShenyuAdminResult.success(ShenyuResultMessage.QUERY_SUCCESS, shenyuDictService.listByPage(query));
     }
@@ -92,6 +95,7 @@ public class ShenyuDictController {
      * @return {@linkplain ShenyuAdminResult}
      */
     @GetMapping("/{id}")
+    @RequiresPermissions("system:dict:edit")
     public ShenyuAdminResult detail(@PathVariable("id") @Valid
                                     @Existed(provider = ShenyuDictMapper.class,
                                             message = "dict is not existed") final String id) {
@@ -105,6 +109,7 @@ public class ShenyuDictController {
      * @return {@link ShenyuAdminResult}
      */
     @PostMapping("")
+    @RequiresPermissions(value = {"system:dict:add", "system:dict:edit"}, logical = Logical.OR)
     public ShenyuAdminResult createShenyuDict(@Valid @RequestBody final ShenyuDictDTO shenyuDictDTO) {
         return ShenyuAdminResult.success(ShenyuResultMessage.CREATE_SUCCESS, shenyuDictService.createOrUpdate(shenyuDictDTO));
     }
@@ -117,6 +122,7 @@ public class ShenyuDictController {
      * @return {@linkplain ShenyuAdminResult}
      */
     @PutMapping("/{id}")
+    @RequiresPermissions("system:dict:edit")
     public ShenyuAdminResult updateShenyuDict(@PathVariable("id") @Valid
                                               @Existed(provider = ShenyuDictMapper.class,
                                                       message = "dict is not existed") final String id,
@@ -132,6 +138,7 @@ public class ShenyuDictController {
      * @return {@linkplain ShenyuAdminResult}
      */
     @DeleteMapping("/batch")
+    @RequiresPermissions("system:dict:delete")
     public ShenyuAdminResult deleteShenyuDicts(@RequestBody @NotEmpty final List<@NotBlank String> ids) {
         return ShenyuAdminResult.success(ShenyuResultMessage.DELETE_SUCCESS, shenyuDictService.deleteShenyuDicts(ids));
     }
@@ -143,6 +150,7 @@ public class ShenyuDictController {
      * @return the shenyu result
      */
     @PostMapping("/batchEnabled")
+    @RequiresPermissions("system:dict:disable")
     public ShenyuAdminResult batchEnabled(@Valid @RequestBody final BatchCommonDTO batchCommonDTO) {
         final Integer result = shenyuDictService.enabled(batchCommonDTO.getIds(), batchCommonDTO.getEnabled());
         return ShenyuAdminResult.success("batch enable success", result);

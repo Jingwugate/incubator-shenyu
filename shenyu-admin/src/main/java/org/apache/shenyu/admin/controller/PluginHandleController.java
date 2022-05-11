@@ -17,6 +17,11 @@
 
 package org.apache.shenyu.admin.controller;
 
+import java.util.List;
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import org.apache.shenyu.admin.mapper.PluginHandleMapper;
 import org.apache.shenyu.admin.model.dto.PluginHandleDTO;
 import org.apache.shenyu.admin.model.page.CommonPager;
@@ -27,6 +32,7 @@ import org.apache.shenyu.admin.model.vo.PluginHandleVO;
 import org.apache.shenyu.admin.service.PluginHandleService;
 import org.apache.shenyu.admin.utils.ShenyuResultMessage;
 import org.apache.shenyu.admin.validation.annotation.Existed;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -35,13 +41,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import java.util.List;
 
 /**
  * this is a plugin handle controller.
@@ -67,9 +68,10 @@ public class PluginHandleController {
      * @return {@linkplain ShenyuAdminResult}
      */
     @GetMapping("")
+    @RequiresPermissions("system:pluginHandler:list")
     public ShenyuAdminResult queryPluginHandles(final String pluginId, final String field,
-                                                @NotNull final Integer currentPage,
-                                                @NotNull final Integer pageSize) {
+                                                @RequestParam @NotNull final Integer currentPage,
+                                                @RequestParam @NotNull final Integer pageSize) {
         CommonPager<PluginHandleVO> commonPager = pluginHandleService.listByPage(new PluginHandleQuery(pluginId, field, null, new PageParameter(currentPage, pageSize)));
         return ShenyuAdminResult.success(ShenyuResultMessage.QUERY_SUCCESS, commonPager);
     }
@@ -93,6 +95,7 @@ public class PluginHandleController {
      * @return {@linkplain ShenyuAdminResult}
      */
     @GetMapping("/{id}")
+    @RequiresPermissions("system:pluginHandler:edit")
     public ShenyuAdminResult detailRule(@PathVariable("id") @Valid
                                         @Existed(provider = PluginHandleMapper.class,
                                                 message = "rule not exited") final String id) {
@@ -107,6 +110,7 @@ public class PluginHandleController {
      * @return {@link ShenyuAdminResult}
      */
     @PostMapping("")
+    @RequiresPermissions("system:pluginHandler:add")
     public ShenyuAdminResult createPluginHandle(@Valid @RequestBody final PluginHandleDTO pluginHandleDTO) {
         Integer createCount = pluginHandleService.createOrUpdate(pluginHandleDTO);
         return ShenyuAdminResult.success(ShenyuResultMessage.CREATE_SUCCESS, createCount);
@@ -120,6 +124,7 @@ public class PluginHandleController {
      * @return {@linkplain ShenyuAdminResult}
      */
     @PutMapping("/{id}")
+    @RequiresPermissions("system:pluginHandler:edit")
     public ShenyuAdminResult updatePluginHandle(@PathVariable("id") @Valid
                                                 @Existed(provider = PluginHandleMapper.class,
                                                         message = "rule not exited") final String id,
@@ -135,6 +140,7 @@ public class PluginHandleController {
      * @return {@linkplain ShenyuAdminResult}
      */
     @DeleteMapping("/batch")
+    @RequiresPermissions("system:pluginHandler:delete")
     public ShenyuAdminResult deletePluginHandles(@RequestBody @NotEmpty final List<@NotBlank String> ids) {
         return ShenyuAdminResult.success(ShenyuResultMessage.DELETE_SUCCESS, pluginHandleService.deletePluginHandles(ids));
     }
